@@ -146,8 +146,8 @@ const HeroSection: React.FC = () => {
             </div>
           ))}
         </div>
-        <button onClick={prevSlide} className="absolute top-1/2 left-4 transform -translate-y-1/2 bg-white p-2 rounded-full shadow-md">◀</button>
-        <button onClick={nextSlide} className="absolute top-1/2 right-4 transform -translate-y-1/2 bg-white p-2 rounded-full shadow-md">▶</button>
+        <button onClick={prevSlide} className="absolute top-1/2 left-4 transform -translate-y-1/2 bg-white p-2 rounded-full shadow-md cursor-pointer">◀</button>
+        <button onClick={nextSlide} className="absolute top-1/2 right-4 transform -translate-y-1/2 bg-white p-2 rounded-full shadow-md cursor-pointer">▶</button>
         <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex space-x-2">
           {slides.map((_, index) => (
             <div key={index} onClick={() => setCurrentSlide(index)} className={`w-3 h-3 rounded-full cursor-pointer ${currentSlide === index ? 'bg-pink-500' : 'bg-gray-300'}`} />

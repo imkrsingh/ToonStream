@@ -282,7 +282,7 @@ const HeroSection: React.FC = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  // To avoid infinite loops when syncing URL and state
+  // Ref to prevent infinite update loops when syncing URL & state
   const lastURLPageRef = useRef<number | null>(null);
 
   // Fetch shows once on mount
@@ -295,35 +295,40 @@ const HeroSection: React.FC = () => {
 
   const totalPages = Math.ceil(shows.length / showsPerPage);
 
-  // Sync page from URL query param on load or URL change
+  // Sync currentPage state from URL param when URL or totalPages changes
   useEffect(() => {
+    if (totalPages === 0) return; // no shows yet, don't sync
+
     const pageParam = searchParams.get('page');
     let page = pageParam ? parseInt(pageParam, 10) : 1;
     if (isNaN(page) || page < 1) page = 1;
-    else if (page > totalPages && totalPages > 0) page = totalPages;
+    else if (page > totalPages) page = totalPages;
 
-    if (page !== currentPage) {
+    // Update state only if it differs from currentPage and last synced URL page
+    if (page !== currentPage && page !== lastURLPageRef.current) {
       setCurrentPage(page);
+      lastURLPageRef.current = page;
     }
-
-    lastURLPageRef.current = page;
   }, [searchParams, totalPages, currentPage]);
 
-  // Update URL when currentPage changes via UI
+  // Update URL query param when currentPage changes by UI
   const updateURL = (page: number) => {
-    if (lastURLPageRef.current === page) return; // prevent loop
+    if (lastURLPageRef.current === page) return; // avoid loops
 
     const params = new URLSearchParams(searchParams.toString());
     params.set('page', page.toString());
-    router.push(`?${params.toString()}`);
+
+    // Use replace instead of push to avoid bloating history stack on quick pagination
+    router.replace(`?${params.toString()}`);
 
     lastURLPageRef.current = page;
   };
 
-  // Go to specific page with bounds checking
+  // Pagination handlers
   const goToPage = (page: number) => {
     if (page < 1) page = 1;
     else if (page > totalPages) page = totalPages;
+
     setCurrentPage(page);
     updateURL(page);
   };
@@ -340,18 +345,19 @@ const HeroSection: React.FC = () => {
     }
   };
 
-  // Pagination slice
+  // Get current shows slice for pagination
   const indexOfLastShow = currentPage * showsPerPage;
   const indexOfFirstShow = indexOfLastShow - showsPerPage;
   const currentShows = shows.slice(indexOfFirstShow, indexOfLastShow);
 
-  // Sample carousel slides
+  // Sample slides for carousel
   const slides: Slide[] = [...Array(8)].map((_, index) => ({
     imageUrl: `https://picsum.photos/200/300?random=${index + 1}`,
     title: `Cartoon Show ${index + 1}`,
     description: 'Join the fun with your favorite cartoon characters. Watch now!',
   }));
 
+  // Recent post titles for sidebar
   const recentPosts = shows.map((s) => s.title);
 
   return (
@@ -390,7 +396,3 @@ const HeroSection: React.FC = () => {
 };
 
 export default HeroSection;
-
-
-
-

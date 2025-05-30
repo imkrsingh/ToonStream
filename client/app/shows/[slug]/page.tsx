@@ -47,10 +47,10 @@ const shows = [
   },
   {
     imageUrl:
-      'https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&w=1280&q=80',
-    title: 'One-Punch Man Season 1 Hindi Dubbed',
+      'https://images.unsplash.com/photo-1663970206512-9d785d57b5dd?q=80&w=2128&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
+    title: 'Ben 10: Alien Force Hindi Dubbed',
     description:
-      'One-Punch Man Season 1 Multi Audio [Hindi-Urdu-Eng-Japanese] available for download and streaming.',
+      'Ben 10: Alien Force Season 1 Multi Audio [Hindi] - Ben faces new alien threats.',
     genres: ['Action', 'Comedy', 'Supernatural'],
     releaseYear: 2015,
     quality: 'BluRay 720p',

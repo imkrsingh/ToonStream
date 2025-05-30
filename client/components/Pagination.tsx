@@ -1,5 +1,5 @@
 'use client';
-import React from 'react';
+import React, { useEffect } from 'react';
 import { HiChevronLeft, HiChevronRight } from 'react-icons/hi';
 
 interface PaginationProps {
@@ -17,17 +17,29 @@ const Pagination: React.FC<PaginationProps> = ({
   onPrev,
   onNext,
 }) => {
+  // Fix invalid currentPage values
+  useEffect(() => {
+    if (currentPage > totalPages && totalPages > 0) {
+      onPageChange(totalPages);
+    } else if (currentPage < 1) {
+      onPageChange(1);
+    }
+  }, [currentPage, totalPages, onPageChange]);
+
   const getPageNumbers = () => {
     const pages: (number | string)[] = [];
-    const maxVisiblePages = 5;
-
+    // Show max 5 pages + first + last + ellipses
     const startPage = Math.max(2, currentPage - 2);
     const endPage = Math.min(totalPages - 1, currentPage + 2);
 
     pages.push(1);
 
     if (startPage > 2) pages.push('…');
-    for (let i = startPage; i <= endPage; i++) pages.push(i);
+
+    for (let i = startPage; i <= endPage; i++) {
+      pages.push(i);
+    }
+
     if (endPage < totalPages - 1) pages.push('…');
 
     if (totalPages > 1) pages.push(totalPages);

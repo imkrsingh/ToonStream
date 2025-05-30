@@ -1,0 +1,17 @@
+@import "tailwindcss";
+/* global styles or tailwind config */
+html,
+body {
+  height: 100%;
+  margin: 0;
+}
+
+#__next {
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+footer {
+  margin-top: auto;
+}

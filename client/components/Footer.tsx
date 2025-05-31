@@ -20,7 +20,17 @@ const Footer: React.FC = () => {
             </div>
 
             {/* Links Section */}
-            <div className="text-center sm:text-left">
+            {/* <div className="text-center sm:text-left">
+              <h3 className="font-semibold text-lg mb-4">Explore</h3>
+              <ul className="space-y-2">
+                <li><a href="#" className="hover:text-pink-500 text-sm">Home</a></li>
+                <li><a href="#" className="hover:text-pink-500 text-sm">Latest Episodes</a></li>
+                <li><a href="#" className="hover:text-pink-500 text-sm">Popular Series</a></li>
+                <li><a href="#" className="hover:text-pink-500 text-sm">Genres</a></li>
+                <li><a href="#" className="hover:text-pink-500 text-sm">Hindi Dubbed</a></li>
+              </ul>
+            </div> */}
+            <div className="hidden sm:block text-center sm:text-left">
               <h3 className="font-semibold text-lg mb-4">Explore</h3>
               <ul className="space-y-2">
                 <li><a href="#" className="hover:text-pink-500 text-sm">Home</a></li>

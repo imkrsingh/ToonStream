@@ -301,25 +301,45 @@ const HeroSection: React.FC = () => {
 
     const pageParam = searchParams.get('page');
     let page = pageParam ? parseInt(pageParam, 10) : 1;
-    if (isNaN(page) || page < 1) page = 1;
+
+    if (isNaN(page) || page < 1) page = totalPages; // invalid page => last page
     else if (page > totalPages) page = totalPages;
 
-    // Update state only if it differs from currentPage and last synced URL page
     if (page !== currentPage && page !== lastURLPageRef.current) {
       setCurrentPage(page);
       lastURLPageRef.current = page;
     }
-  }, [searchParams, totalPages, currentPage]);
+
+    // Clean URL for page=1 or invalid page params
+    if (pageParam !== (page === 1 ? null : page.toString())) {
+      const params = new URLSearchParams(searchParams.toString());
+
+      if (page === 1) {
+        params.delete('page');
+      } else {
+        params.set('page', page.toString());
+      }
+
+      const queryString = params.toString();
+      router.replace(queryString ? `?${queryString}` : '/');
+    }
+  }, [searchParams, totalPages, currentPage, router]);
 
   // Update URL query param when currentPage changes by UI
   const updateURL = (page: number) => {
     if (lastURLPageRef.current === page) return; // avoid loops
 
     const params = new URLSearchParams(searchParams.toString());
-    params.set('page', page.toString());
 
-    // Use replace instead of push to avoid bloating history stack on quick pagination
-    router.replace(`?${params.toString()}`);
+    if (page === 1) {
+      // Remove page param from URL for page 1
+      params.delete('page');
+    } else {
+      params.set('page', page.toString());
+    }
+
+    const queryString = params.toString();
+    router.replace(queryString ? `?${queryString}` : '/');
 
     lastURLPageRef.current = page;
   };

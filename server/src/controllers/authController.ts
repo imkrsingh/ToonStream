@@ -3,9 +3,14 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import User from '../models/User';
 import Role from '../models/Role';
+import { sendMail } from '../utility/mailer';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your_jwt_secret';
 const JWT_REFRESH_SECRET = process.env.JWT_REFRESH_SECRET || 'your_jwt_refresh_secret';
+
+function isErrorWithName(error: unknown): error is { name: string } {
+  return typeof error === 'object' && error !== null && 'name' in error;
+}
 
 export const register = async (req: Request, res: Response): Promise<Response | undefined> => {
   const { name, email, password, role } = req.body;
@@ -142,5 +147,49 @@ export const refreshToken = async (req: Request, res: Response) => {
   } catch (err) {
     console.error(err);
     return res.status(403).json({ message: 'Invalid refresh token' });
+  }
+};
+
+
+
+////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////
+
+export const forgotPassword = async (req: Request, res: Response) => {
+  const { email } = req.body;
+  const user = await User.findOne({ email });
+  if (!user) return res.status(404).json({ message: 'User not found' });
+
+  const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET!, { expiresIn: '15m' });
+  const resetLink = `${process.env.FRONTEND_URL}/reset-password?token=${token}`;
+
+  await sendMail(
+    email,
+    'ToonStream Password Reset',
+    `<p>Hello ${user.name},</p>
+     <p>Click the link below to reset your password:</p>
+     <a href="${resetLink}">${resetLink}</a>
+     <p>This link expires in 15 minutes.</p>`
+  );
+
+  res.json({ message: 'Password reset link sent to your email' });
+};
+
+export const resetPassword = async (req: Request, res: Response) => {
+  const { token, newPassword } = req.body;
+
+  try {
+    const decoded: any = jwt.verify(token, process.env.JWT_SECRET!);
+    const user = await User.findById(decoded.id);
+    if (!user) return res.status(404).json({ message: 'User not found' });
+
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    user.password = hashedPassword;
+    await user.save();
+
+    res.json({ message: 'Password reset successful' });
+  } catch (err) {
+    console.error(err);
+    res.status(400).json({ message: 'Invalid or expired token' });
   }
 };

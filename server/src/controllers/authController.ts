@@ -1,3 +1,4 @@
+// src/controllers/authController.ts
 import { Request, Response } from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
@@ -10,8 +11,23 @@ const JWT_REFRESH_SECRET = process.env.JWT_REFRESH_SECRET || 'your_jwt_refresh_s
 export const register = async (req: Request, res: Response): Promise<Response | undefined> => {
   const { name, email, password, role } = req.body;
 
+  const requestedRole = role || 'user';
+
   try {
-    const roleDoc = await Role.findOne({ name: role });
+    if (requestedRole !== 'user') {
+      // Only superadmin can create admin or superadmin - reject if no valid token with superadmin
+      const authHeader = req.headers.authorization;
+      if (!authHeader || !authHeader.startsWith('Bearer ')) {
+        return res.status(403).json({ message: 'Only superadmin can create admin or superadmin users' });
+      }
+      const token = authHeader.split(' ')[1];
+      const decoded = jwt.verify(token, JWT_SECRET) as any;
+      if (decoded.role !== 'superadmin') {
+        return res.status(403).json({ message: 'Only superadmin can create admin or superadmin users' });
+      }
+    }
+
+    const roleDoc = await Role.findOne({ name: requestedRole });
     if (!roleDoc) {
       return res.status(400).json({ message: 'Invalid role. Available roles are superadmin, admin, and user.' });
     }
@@ -54,24 +70,27 @@ export const login = async (req: Request, res: Response): Promise<Response | und
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) return res.status(401).json({ message: 'Invalid credentials' });
 
+    // Fix role typing issue by asserting
+    const roleName = (user.role as any).name || 'user';
+
     const accessToken = jwt.sign(
       {
-    id: user._id,
-    name: user.name,
-    email: user.email,
-    role: user.role.name,
-  },
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        role: roleName,
+      },
       JWT_SECRET,
       { expiresIn: '15m' }
     );
 
     const refreshToken = jwt.sign(
       {
-    id: user._id,
-    name: user.name,
-    email: user.email,
-    role: user.role.name,
-  },
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        role: roleName,
+      },
       JWT_REFRESH_SECRET,
       { expiresIn: '7d' }
     );
@@ -83,7 +102,7 @@ export const login = async (req: Request, res: Response): Promise<Response | und
         id: user._id,
         name: user.name,
         email: user.email,
-        role: user.role.name,
+        role: roleName,
       },
     });
   } catch (error) {

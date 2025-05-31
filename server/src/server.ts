@@ -1,10 +1,11 @@
-import express from 'express';
-import type { Request, Response } from 'express';
+import express, { Request, Response } from 'express';
 import dotenv from 'dotenv';
-import { connectDB } from './config/db';
-import userRoutes from './routes/userRoutes';
-import { setupSwagger } from './config/swagger';
 import cors from 'cors';
+
+import { connectDB } from './config/db';
+import authRoutes from './routes/authRoutes';
+import adminRoutes from './routes/adminRoutes';
+import { setupSwagger } from './config/swagger';
 import { seedRoles } from './config/seedRoles';
 
 dotenv.config();
@@ -12,28 +13,35 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 8000;
 
-// Cors
-app.use(cors());
+const allowedOrigin = process.env.CORS_ORIGIN || 'http://localhost:3000';
 
-// Middleware
+app.use(cors({ origin: allowedOrigin }));
 app.use(express.json());
 
-// Connect to MongoDB
-connectDB();
+async function startServer() {
+  try {
+    await connectDB();
+    console.log('MongoDB connected');
 
-// Seed roles
-seedRoles();
+    await seedRoles();
+    console.log('Roles seeded');
 
-// Swagger setup
-setupSwagger(app);
+    setupSwagger(app);
 
-// Routes
-app.use('/api/users', userRoutes);
-app.get('/', (req: Request, res: Response) => {
-  res.send('Hiii I am using Express with TS');
-});
+    app.use('/api/auth', authRoutes);    // Auth routes (register/login/refresh)
+    app.use('/api/admin', adminRoutes);  // Admin creation route (protected)
 
-// Start server
-app.listen(PORT, () => {
-  console.log(`Server listening on port ${PORT}`);
-});
+    app.get('/', (req: Request, res: Response) => {
+      res.send('Hiii I am using Express with TS');
+    });
+
+    app.listen(PORT, () => {
+      console.log(`Server listening on port ${PORT}`);
+    });
+  } catch (error) {
+    console.error('Failed to start server:', error);
+    process.exit(1);
+  }
+}
+
+startServer();

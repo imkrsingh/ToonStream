@@ -1,4 +1,3 @@
-// src/controllers/authController.ts
 import { Request, Response } from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
@@ -15,15 +14,29 @@ export const register = async (req: Request, res: Response): Promise<Response | 
 
   try {
     if (requestedRole !== 'user') {
-      // Only superadmin can create admin or superadmin - reject if no valid token with superadmin
+      // Need token to create admin or superadmin
       const authHeader = req.headers.authorization;
       if (!authHeader || !authHeader.startsWith('Bearer ')) {
-        return res.status(403).json({ message: 'Only superadmin can create admin or superadmin users' });
+        return res.status(403).json({ message: 'Only admin or superadmin can create admin or superadmin users' });
       }
       const token = authHeader.split(' ')[1];
-      const decoded = jwt.verify(token, JWT_SECRET) as any;
-      if (decoded.role !== 'superadmin') {
-        return res.status(403).json({ message: 'Only superadmin can create admin or superadmin users' });
+      let decoded: any;
+      try {
+        decoded = jwt.verify(token, JWT_SECRET);
+      } catch (err) {
+        return res.status(403).json({ message: 'Invalid or expired token' });
+      }
+
+      if (requestedRole === 'superadmin') {
+        // Only superadmin can create superadmin
+        if (decoded.role !== 'superadmin') {
+          return res.status(403).json({ message: 'Only superadmin can create superadmin users' });
+        }
+      } else if (requestedRole === 'admin') {
+        // Both superadmin and admin can create admin
+        if (decoded.role !== 'superadmin' && decoded.role !== 'admin') {
+          return res.status(403).json({ message: 'Only admin or superadmin can create admin users' });
+        }
       }
     }
 

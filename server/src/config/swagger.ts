@@ -1,11 +1,11 @@
 import swaggerJsdoc from 'swagger-jsdoc';
 import swaggerUi from 'swagger-ui-express';
 import { Express } from 'express';
-const glob = require('glob');  // Use `require` for glob
+const glob = require('glob');
 
 const options = {
   definition: {
-    openapi: '3.0.0',
+    openapi: '3.0.0', // Must have openapi version
     info: {
       title: 'Express TS API',
       version: '1.0.0',
@@ -13,15 +13,32 @@ const options = {
     },
     servers: [
       {
-        url: 'http://localhost:5000',
+        url: 'http://localhost:8000',
+      },
+    ],
+    components: {
+      securitySchemes: {
+        bearerAuth: {
+          type: 'http',
+          scheme: 'bearer',
+          bearerFormat: 'JWT',
+        },
+      },
+    },
+    // Global security requirement (optional)
+    // This applies to all endpoints unless overridden
+    security: [
+      {
+        bearerAuth: [],
       },
     ],
   },
   apis: [
-  ...glob.sync('./src/routes/**/*.ts'),       // Automatically find all route files
-  './src/docs/userDocs.ts',                  // Explicitly include userDocs
-  './src/docs/cartDocs.ts',                  // Explicitly include cartDocs
-],
+    ...glob.sync('./src/routes/**/*.ts'), // Your route files with swagger comments
+    './src/docs/authDocs.ts',             // Additional doc files
+    './src/docs/userDocs.ts',
+    './src/docs/cartDocs.ts',
+  ],
 };
 
 const swaggerSpec = swaggerJsdoc(options);
